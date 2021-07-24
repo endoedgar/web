@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<title>Endoedgar - base64 enc dec</title>
+<meta charset="UTF-8"/>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+</head>
+<body>
+    <div class="container-fluid">
+        <h1>Simple Encoders</h1>
+
+        <fieldset class="row mb-3">
+            <legend class="col-form-label col-sm-2 pt-0">
+                Encoders
+            </legend>
+            <div class="col-sm-10">
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="codec" id="Base64Codec" value="Base64Codec" /> 
+                    <label class="form-check-label" for="Base64Codec">
+                        Base64
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="codec" id="URICodec" value="URICodec" /> 
+                    <label class="form-check-label" for="URICodec">
+                        URI
+                    </label>
+                </div>
+            </div>
+        </fieldset>
+        <div class="row">
+            <div class="col-md">
+                <label class="form-label" for="plaintext">
+                    Plain text
+                </label>
+                <textarea class="form-control" id="plaintext" rows="5"></textarea>
+                </label>
+            </div>
+            <div class="col-md">
+                <label class="form-label" for="encoded">
+                    Encoded
+                </label>
+                <textarea class="form-control" id="encoded" rows="5"></textarea>
+            </div>
+        </div>
+    </div>
+    <style>
+        * {
+            font-family: monospace;
+        }
+    </style>
+
+    <script>
+        function URICodec() {
+            const name = 'URICodec';
+            
+            const encode = (str) => {
+                return encodeURIComponent(str);
+            };
+
+            const decode = (str) => {
+                return decodeURIComponent(encoded.value);
+            }
+
+            return {
+                name,
+                encode,
+                decode
+            };
+        }
+
+        function Base64Codec() {
+            const name = 'Base64Codec';
+            
+            const encode = (str) => {
+                return btoa(str);
+            };
+
+            const decode = (str) => {
+                return atob(encoded.value);
+            }
+
+            return {
+                name,
+                encode,
+                decode
+            };
+        }
+
+        function Encoder(plaintextElemID, encodedElemID, codecElemName) 
+        {
+            let plainTextElem= null;
+            let encodedElem = null;
+            let codec = Base64Codec();
+            let onError = (error) => {
+                const errorMsg = `Encoder error: ${error}`;
+                console.error(errorMsg);
+                alert(errorMsg);
+            }
+
+            const codecs = {
+                'Base64Codec': Base64Codec(),
+                'URICodec': URICodec()
+            };
+
+            const className = 'Encoder';
+
+            const setCodec = (newCodec) => {
+                if(!codecs.hasOwnProperty(newCodec)) {
+                    onError(`Invalid codec selected: ${newCodec}`);
+                    return;
+                }
+
+                codec = codecs[newCodec];
+                plainTextElemOnChange();
+            }
+
+            const plainTextElemOnChange = () => {
+                if(!codec) {
+                    onError("No codec found");
+                    return;
+                }
+
+                encoded.value = codec.encode(plainTextElem.value);
+            };
+    
+            const encodedElemOnChange = () => {
+                let result;
+
+                try {
+                    if(!codec)
+                        throw "No codec found";
+                    result = codec.decode(encoded.value);
+                } catch(err) {
+                    result = `${codec?.name}: ${err.message}`;
+                }
+
+                plainTextElem.value = result;
+            };
+
+            const codecElemOnChange = (event) => {
+                setCodec(event.target.value);
+            };
+    
+            const startListening = () => {
+                plainTextElem = document.getElementById(plaintextElemID);
+                encodedElem = document.getElementById(encodedElemID);
+                codecElems = document.querySelectorAll(`input[name=${codecElemName}]`)
+
+                if(!plainTextElem || !encodedElem) {
+                    onError(`${className}: elements not found.`);
+                    return;
+                }
+    
+                plainTextElem.addEventListener('keyup', plainTextElemOnChange);
+                encodedElem.addEventListener('keyup', encodedElemOnChange);
+
+                if(!codecElems)
+                    return;
+                
+                codecElems.forEach(codecElem => {
+                    codecElem.addEventListener('change', codecElemOnChange);
+                });
+            }
+    
+            return {
+                onError,
+                startListening,
+                setCodec
+            };
+        }
+    
+        const encoderInst = Encoder('plaintext', 'encoded', 'codec');
+        encoderInst.startListening();
+    </script>
+</body>
+</html>
